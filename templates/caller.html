@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Caller</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .current-ball-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .current-ball {
+            font-size: 4em;
+            font-weight: bold;
+            color: #ff6b6b;
+            background: #f8f9fa;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 5px solid #ff6b6b;
+            transition: all 0.3s ease;
+        }
+
+        .current-ball.expanded {
+            font-size: 4em;
+            width: 150px;
+            height: 150px;
+            border-width: 5px;
+        }
+
+        .current-ball.collapsed {
+            font-size: 6em;
+            width: 220px;
+            height: 220px;
+            border-width: 7px;
+        }
+
+        .ball-label {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .ball-label.expanded {
+            font-size: 1.2em;
+        }
+
+        .ball-label.collapsed {
+            font-size: 1.5em;
+        }
+
+        .bingo-call-section {
+            text-align: center;
+            margin-top: 15px;
+            min-height: 30px;
+        }
+
+        .bingo-call {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            font-style: italic;
+            padding: 8px 15px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .previous-ball-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .previous-ball-label {
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .previous-ball {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #999;
+            display: inline-block;
+            min-width: 50px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn.expanded {
+            padding: 15px 30px;
+            font-size: 1.2em;
+        }
+
+        .btn.collapsed {
+            padding: 20px 40px;
+            font-size: 1.5em;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .drawn-numbers {
+            margin-top: 40px;
+        }
+
+        .drawn-title {
+            text-align: center;
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .drawn-title:hover {
+            background: #e9ecef;
+        }
+
+        .toggle-icon {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .drawn-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .drawn-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+        }
+
+        .bingo-columns {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bingo-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .column-header {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .number-ball {
+            background: #e9ecef;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #495057;
+            margin: 0 auto;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .current-ball {
+                width: 120px;
+                height: 120px;
+                font-size: 3em;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 1em;
+                margin: 5px;
+                display: block;
+                width: 200px;
+                margin: 10px auto;
+            }
+
+            .bingo-columns {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .number-ball {
+                width: 50px;
+                height: 50px;
+                font-size: 1em;
+            }
+
+            .column-header {
+                font-size: 0.9em;
+                padding: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Bingo Caller</h1>
+
+            <div class="current-ball-section">
+            <div class="ball-label expanded" id="ballLabel">Current Ball</div>
+            <div class="current-ball expanded" id="currentBall">
+                {{ current_ball if current_ball else '--' }}
+            </div>
+            <div class="bingo-call-section">
+                <div class="bingo-call" id="bingoCall">
+                    {% if current_call %}
+                    {{ current_call }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="previous-ball-section">
+                <div class="previous-ball-label">Previous Ball</div>
+                <div class="previous-ball" id="previousBall">
+                    {{ previous_ball if previous_ball else '--' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary expanded" id="drawBtn">🎲 Draw Next Ball</button>
+            <button class="btn btn-danger expanded" id="resetBtn">🔄 Reset Game</button>
+        </div>
+
+        <div class="drawn-numbers">
+            <div class="drawn-title" id="drawnTitle">
+                <span>📋 Drawn Numbers</span>
+                <span class="toggle-icon" id="toggleIcon">▼</span>
+            </div>
+            <div class="drawn-content" id="drawnContent">
+                <div id="drawnNumbers">
+                    <div class="bingo-columns">
+                        {% for column, numbers in drawn_columns.items() %}
+                        <div class="bingo-column">
+                            {% if column == '1' %}
+                            <div class="column-header">1-9</div>
+                            {% elif column == '2' %}
+                            <div class="column-header">10-19</div>
+                            {% elif column == '3' %}
+                            <div class="column-header">20-29</div>
+                            {% elif column == '4' %}
+                            <div class="column-header">30-39</div>
+                            {% elif column == '5' %}
+                            <div class="column-header">40-49</div>
+                            {% elif column == '6' %}
+                            <div class="column-header">50-59</div>
+                            {% elif column == '7' %}
+                            <div class="column-header">60-69</div>
+                            {% elif column == '8' %}
+                            <div class="column-header">70-79</div>
+                            {% elif column == '9' %}
+                            <div class="column-header">80-90</div>
+                            {% endif %}
+                            {% for number in numbers %}
+                            <div class="number-ball">{{ number }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <span id="remainingCount">{{ remaining_count }}</span> numbers remaining
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const drawBtn = document.getElementById('drawBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const currentBall = document.getElementById('currentBall');
+            const drawnNumbers = document.getElementById('drawnNumbers');
+            const remainingCount = document.getElementById('remainingCount');
+            const drawnTitle = document.getElementById('drawnTitle');
+            const drawnContent = document.getElementById('drawnContent');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const ballLabel = document.getElementById('ballLabel');
+            const previousBall = document.getElementById('previousBall');
+            const bingoCall = document.getElementById('bingoCall');
+            
+            // Check if we should start collapsed (no drawn numbers)
+            // Start collapsed if no ball has been drawn yet
+            let isCollapsed = currentBall.textContent.trim() === '--';
+
+            // Set initial state
+            if (isCollapsed) {
+                drawnContent.classList.add('collapsed');
+                toggleIcon.classList.add('collapsed');
+                ballLabel.classList.remove('expanded');
+                ballLabel.classList.add('collapsed');
+                currentBall.classList.remove('expanded');
+                currentBall.classList.add('collapsed');
+                drawBtn.classList.remove('expanded');
+                drawBtn.classList.add('collapsed');
+                resetBtn.classList.remove('expanded');
+                resetBtn.classList.add('collapsed');
+            }
+
+            // Function to collapse the drawn numbers section
+            function collapseSection() {
+                if (!isCollapsed) {
+                    isCollapsed = true;
+                    drawnContent.classList.add('collapsed');
+                    toggleIcon.classList.add('collapsed');
+                    ballLabel.classList.remove('expanded');
+                    ballLabel.classList.add('collapsed');
+                    currentBall.classList.remove('expanded');
+                    currentBall.classList.add('collapsed');
+                    drawBtn.classList.remove('expanded');
+                    drawBtn.classList.add('collapsed');
+                    resetBtn.classList.remove('expanded');
+                    resetBtn.classList.add('collapsed');
+                }
+            }
+
+            // Toggle collapse/expand
+            drawnTitle.addEventListener('click', function() {
+                isCollapsed = !isCollapsed;
+                if (isCollapsed) {
+                    drawnContent.classList.add('collapsed');
+                    toggleIcon.classList.add('collapsed');
+                    // Make ball and buttons bigger when collapsed
+                    ballLabel.classList.remove('expanded');
+                    ballLabel.classList.add('collapsed');
+                    currentBall.classList.remove('expanded');
+                    currentBall.classList.add('collapsed');
+                    drawBtn.classList.remove('expanded');
+                    drawBtn.classList.add('collapsed');
+                    resetBtn.classList.remove('expanded');
+                    resetBtn.classList.add('collapsed');
+                } else {
+                    drawnContent.classList.remove('collapsed');
+                    toggleIcon.classList.remove('collapsed');
+                    // Make ball and buttons smaller when expanded
+                    ballLabel.classList.remove('collapsed');
+                    ballLabel.classList.add('expanded');
+                    currentBall.classList.remove('collapsed');
+                    currentBall.classList.add('expanded');
+                    drawBtn.classList.remove('collapsed');
+                    drawBtn.classList.add('expanded');
+                    resetBtn.classList.remove('collapsed');
+                    resetBtn.classList.add('expanded');
+                }
+            });
+
+            drawBtn.addEventListener('click', function() {
+                fetch('/draw')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                            drawBtn.disabled = true;
+                            drawBtn.textContent = 'Game Complete!';
+                            return;
+                        }
+
+                        // Update previous ball (current becomes previous)
+                        if (currentBall.textContent !== '--') {
+                            previousBall.textContent = currentBall.textContent;
+                        }
+
+                        // Update current ball with animation
+                        currentBall.textContent = data.ball;
+                        currentBall.style.animation = 'pulse 0.5s ease-in-out';
+
+                        // Update bingo call
+                        if (data.call) {
+                            bingoCall.textContent = data.call;
+                        } else {
+                            bingoCall.textContent = '';
+                        }
+
+                        // Update drawn numbers
+                        updateDrawnNumbers(data.drawn_columns);
+
+                        // Update remaining count
+                        remainingCount.textContent = data.remaining;
+
+                        // Disable button if no numbers left
+                        if (data.remaining === 0) {
+                            drawBtn.disabled = true;
+                            drawBtn.textContent = 'Game Complete!';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while drawing a number.');
+                    });
+            });
+
+            resetBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the game?')) {
+                    fetch('/reset')
+                        .then(response => response.json())
+                        .then(data => {
+                            // Reset current and previous balls
+                            currentBall.textContent = '--';
+                            previousBall.textContent = '--';
+                            
+                            // Clear bingo call
+                            bingoCall.textContent = '';
+                            
+                            // Reset drawn numbers
+                            updateDrawnNumbers(data.drawn_columns);
+                            
+                            // Update remaining count
+                            remainingCount.textContent = data.remaining;
+                            
+                            // Re-enable draw button
+                            drawBtn.disabled = false;
+                            drawBtn.textContent = '🎲 Draw Next Ball';
+                            
+                            // Automatically collapse the drawn numbers section
+                            collapseSection();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while resetting the game.');
+                        });
+                }
+            });
+
+            function updateDrawnNumbers(columns) {
+                const columnHeaders = {
+                    '1': '1-9',
+                    '2': '10-19',
+                    '3': '20-29',
+                    '4': '30-39',
+                    '5': '40-49',
+                    '6': '50-59',
+                    '7': '60-69',
+                    '8': '70-79',
+                    '9': '80-90'
+                };
+                
+                let html = '<div class="bingo-columns">';
+                // Sort columns to ensure proper order
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9'].forEach(column => {
+                    html += `<div class="bingo-column">
+                        <div class="column-header">${columnHeaders[column]}</div>`;
+                    columns[column].forEach(number => {
+                        html += `<div class="number-ball">${number}</div>`;
+                    });
+                    html += '</div>';
+                });
+                html += '</div>';
+                drawnNumbers.innerHTML = html;
+            }
+
+            // Remove animation after it completes
+            currentBall.addEventListener('animationend', function() {
+                this.style.animation = '';
+            });
+        });
+
+        // Add pulse animation CSS via JavaScript
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
