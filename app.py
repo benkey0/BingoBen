@@ -227,4 +227,10 @@ def reset_game():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Bind to 0.0.0.0 to make it accessible from outside the container
+    # Use environment variables for production, debug=False for production
+    import os
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+    port = int(os.environ.get('FLASK_PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    app.run(host=host, port=port, debug=debug)
